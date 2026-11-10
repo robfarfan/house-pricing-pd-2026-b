@@ -1,0 +1,44 @@
+# Configuración del pipeline de House_Pricing
+
+# Features seleccionadas en notebooks/1.0-rf-analisis-exploratorio.ipynb (sección "Selección de features"):
+# top 10 de cada grupo según su relación con SalePrice.
+MODEL_FEATURES:
+  # Continuas: |correlación de Pearson|
+  - GrLivArea
+  - GarageArea
+  - TotalBsmtSF
+  - 1stFlrSF
+  - YearBuilt
+  - YearRemodAdd
+  - GarageYrBlt
+  - MasVnrArea
+  - BsmtFinSF1
+  - LotFrontage
+  # Discretas: |correlación de Pearson|
+  - OverallQual
+  - GarageCars
+  - FullBath
+  - TotRmsAbvGrd
+  - Fireplaces
+  - HalfBath
+  - BsmtFullBath
+  - BedroomAbvGr
+  - KitchenAbvGr
+  - MSSubClass
+  # Categóricas: razón de correlación η
+  - Neighborhood
+  - ExterQual
+  - BsmtQual
+  - KitchenQual
+  - GarageFinish
+  - FireplaceQu
+  - Foundation
+  - GarageType
+  - BsmtFinType1
+  - HeatingQC
+
+# Rango de SalePrice en train.csv (USD). La inferencia marca como no
+# coherente cualquier predicción fuera de este rango o no finita.
+SALEPRICE_RANGE:
+  min: 34900
+  max: 755000
