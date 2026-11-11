@@ -20,7 +20,7 @@ Construir un modelo que prediga `SalePrice` con el dataset de Kaggle *House Pric
 - ✅ Notebook de inferencia en `notebooks/4.0-rf-inferencia.ipynb`, con las predicciones en `data/processed/predicciones_test.csv`.
 - ✅ Script de inferencia para la API en `scripts/inferencia.py`, con logging, control de calidad y pruebas.
 - ✅ Repositorio git público en https://github.com/robfarfan/house-pricing-pd-2026-b (`main`).
-- 🔄 Integración de MLflow en los notebooks 3.0 y 4.0, en la rama `feature/mlflow` (sin commit todavía; ver sección MLflow).
+- 🔄 Integración de MLflow en los notebooks 3.0 y 4.0, en la rama `feature/mlflow` (subida a GitHub). Por ahora las ramas se manejan de forma independiente, sin merge a `main`; `main` solo recibió el renombre de los notebooks (commit e0635e5). Ver sección MLflow.
 - ⏭️ **Siguiente paso:** crear la API con FastAPI que consuma `scripts/inferencia.py` (`predecir_registros`).
 
 ## Estructura relevante
