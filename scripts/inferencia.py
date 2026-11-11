@@ -1,7 +1,7 @@
 """Inferencia del modelo ganador de House Pricing.
 
 Carga el pipeline de inferencia generado en el notebook
-``2.0-rf-modelado`` (selección de features, ingeniería de
+``3.0-rf-entrenamiento-modelos`` (selección de features, ingeniería de
 características y GradientBoosting) y predice ``SalePrice`` en dólares
 a partir de datos crudos con el formato de ``test.csv``.
 

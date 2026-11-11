@@ -14,11 +14,13 @@ Construir un modelo que prediga `SalePrice` con el dataset de Kaggle *House Pric
 - ✅ Entorno conda `env_house_pricing` (Python 3.11) funcionando.
 - ✅ Análisis exploratorio en `notebooks/1.0-rf-analisis-exploratorio.ipynb`.
 - ✅ Features seleccionadas en `pipeline_config.yaml` (`MODEL_FEATURES`).
-- ✅ Ingeniería de características en `notebooks/1.1-rf-transformaciones.ipynb`, con un pipeline de scikit-learn y feature-engine.
-- ✅ Torneo de modelos en `notebooks/2.0-rf-modelado.ipynb`. El ganador es **GradientBoosting**.
+- ✅ Ingeniería de características en `notebooks/2.0-rf-feature-engineering.ipynb`, con un pipeline de scikit-learn y feature-engine.
+- ✅ Torneo de modelos en `notebooks/3.0-rf-entrenamiento-modelos.ipynb`. El ganador es **GradientBoosting**.
 - ✅ Pipeline de inferencia completo, de los datos crudos al precio en dólares, en `models/pipeline_inferencia.joblib`.
-- ✅ Notebook de inferencia en `notebooks/3.0-rf-inferencia.ipynb`, con las predicciones en `data/processed/predicciones_test.csv`.
+- ✅ Notebook de inferencia en `notebooks/4.0-rf-inferencia.ipynb`, con las predicciones en `data/processed/predicciones_test.csv`.
 - ✅ Script de inferencia para la API en `scripts/inferencia.py`, con logging, control de calidad y pruebas.
+- ✅ Repositorio git público en https://github.com/robfarfan/house-pricing-pd-2026-b (`main`).
+- 🔄 Integración de MLflow en los notebooks 3.0 y 4.0, en la rama `feature/mlflow` (sin commit todavía; ver sección MLflow).
 - ⏭️ **Siguiente paso:** crear la API con FastAPI que consuma `scripts/inferencia.py` (`predecir_registros`).
 
 ## Estructura relevante
@@ -31,16 +33,16 @@ House_Pricing/
 ├── environment.yml            <- generado por la plantilla (desactualizado, ver Pendientes)
 ├── pyproject.toml             <- requires-python ">=3.11" y configuración de pytest (pythonpath = scripts)
 ├── data/raw/                  <- train.csv, test.csv, sample_submission.csv, data_description.txt
-├── data/processed/            <- X_train, X_val, X_test, y_train, y_val (salida del 1.1) y predicciones_test.csv
+├── data/processed/            <- X_train, X_val, X_test, y_train, y_val (salida del 2.0) y predicciones_test.csv
 ├── models/
-│   ├── pipeline_fe.joblib         <- pipeline de features ajustado con el 80 % (notebook 1.1)
+│   ├── pipeline_fe.joblib         <- pipeline de features ajustado con el 80 % (notebook 2.0)
 │   ├── modelo_ganador.joblib      <- features + GradientBoosting ajustado con el 80 % (el evaluado en el torneo)
 │   └── pipeline_inferencia.joblib <- PIPELINE DE PRODUCCIÓN: crudo → USD, ajustado con el 100 % de train
 ├── notebooks/
 │   ├── 1.0-rf-analisis-exploratorio.ipynb
-│   ├── 1.1-rf-transformaciones.ipynb
-│   ├── 2.0-rf-modelado.ipynb
-│   └── 3.0-rf-inferencia.ipynb
+│   ├── 2.0-rf-feature-engineering.ipynb
+│   ├── 3.0-rf-entrenamiento-modelos.ipynb
+│   └── 4.0-rf-inferencia.ipynb
 ├── scripts/
 │   ├── inferencia.py          <- módulo de inferencia para FastAPI
 │   ├── probar_inferencia.py   <- prueba por terminal con casas aleatorias de test
@@ -77,8 +79,8 @@ House_Pricing/
 ## Convenciones y forma de trabajo
 
 - **Nombres de notebooks** (convenio de Cookiecutter): `<número>-rf-<descripción-con-guiones>.ipynb`.
-  - `1.x` para exploración y features.
-  - `2.0` para modelado y `3.0` para inferencia.
+  - Una fase por número entero: `1.0` análisis exploratorio, `2.0` feature engineering, `3.0` entrenamiento de modelos y `4.0` inferencia. Las variantes de una misma fase usan `x.1`, `x.2`…
+  - El 2026-11-10 se renombraron (antes: `1.1-rf-transformaciones`, `2.0-rf-modelado` y `3.0-rf-inferencia`). Los runs de MLflow anteriores conservan el nombre viejo como origen.
 - **En los notebooks:**
   - Cada paso lleva su título y una descripción simple, y va en su propia celda.
   - Ante cualquier decisión metodológica, el usuario prefiere que le preguntemos con opciones y una recomendación, en vez de asumir.
@@ -107,13 +109,13 @@ House_Pricing/
 | TotalBsmtSF (0.61) | FullBath (0.56) | BsmtQual (0.68) |
 | 1stFlrSF (0.61) | TotRmsAbvGrd (0.53) | KitchenQual (0.68) |
 | YearBuilt (0.52) | Fireplaces (0.47) | GarageFinish (0.55) |
-| YearRemodAdd (0.51) | HalfBath (0.28) | FireplaceQu (0.54) → descartada en el 1.1 |
+| YearRemodAdd (0.51) | HalfBath (0.28) | FireplaceQu (0.54) → descartada en el 2.0 |
 | GarageYrBlt (0.49) | BsmtFullBath (0.23) | Foundation (0.51) |
 | MasVnrArea (0.48) | BedroomAbvGr (0.17) | GarageType (0.50) |
 | BsmtFinSF1 (0.39) | KitchenAbvGr (−0.14) | BsmtFinType1 (0.46) |
 | LotFrontage (0.35) | MSSubClass (−0.08) | HeatingQC (0.44) |
 
-## Notebook 1.1: ingeniería de características
+## Notebook 2.0: ingeniería de características
 
 Decisiones que tomó el usuario:
 
@@ -136,10 +138,10 @@ Decisiones que tomó el usuario:
 
 **Resultado:** 44 columnas finales. El pipeline quedó guardado en `models/pipeline_fe.joblib`.
 
-## Notebook 2.0: torneo de modelos
+## Notebook 3.0: torneo de modelos
 
 **Decisiones que tomó el usuario:**
-- **Fuga de datos:** se parte de los datos crudos con el mismo split del 1.1 (el notebook verifica que el set de validación sea idéntico). Cada modelo es `Pipeline(clone(pipeline_fe) + modelo)`, así que las features se reajustan en cada fold.
+- **Fuga de datos:** se parte de los datos crudos con el mismo split del 2.0 (el notebook verifica que el set de validación sea idéntico). Cada modelo es `Pipeline(clone(pipeline_fe) + modelo)`, así que las features se reajustan en cada fold.
 - **Búsqueda:** `GridSearchCV` con KFold k=10 (`shuffle=True`, `random_state=42`).
 - **Métrica de la CV:** el RMSE real en dólares, con `expm1` aplicado dentro del scorer y las predicciones log limitadas a [0, 15].
 - **Comparación:** contra el set de validación, con el RMSE real y el NRMSE = RMSE / (máx − mín de SalePrice en validación).
@@ -156,7 +158,7 @@ Decisiones que tomó el usuario:
 
 **Ganador, confirmado por el usuario:** GradientBoosting con `learning_rate=0.03`, `max_depth=3`, `n_estimators=300` y `subsample=0.8`.
 
-**Pipeline de inferencia** (sección final del 2.0), reentrenado con el 100 % de train (1458 casas) y guardado en `models/pipeline_inferencia.joblib`:
+**Pipeline de inferencia** (sección final del 3.0), reentrenado con el 100 % de train (1458 casas) y guardado en `models/pipeline_inferencia.joblib`:
 
 ```
 TransformedTargetRegressor(func=log1p, inverse_func=expm1)
@@ -166,12 +168,22 @@ TransformedTargetRegressor(func=log1p, inverse_func=expm1)
     └── modelo     → GradientBoosting ganador
 ```
 
-## Notebook 3.0: inferencia
+## Notebook 4.0: inferencia
 
-1. Carga `pipeline_inferencia.joblib` y lee `test.csv` crudo.
+1. Carga el champion del Model Registry (`models:/house_pricing@champion`, flavor `sklearn`) y lee `test.csv` crudo.
 2. Predice en dólares: 1459 casas, sin faltantes ni valores negativos. La media predicha es 178,185 USD, contra 180,921 USD en train.
 3. Compara en un histograma la distribución predicha con la real.
 4. Guarda `data/processed/predicciones_test.csv` con `Id` y `SalePrice`, en el formato de `sample_submission.csv`.
+5. Registra un run en el experimento `house_pricing-inferencia` con la versión usada, estadísticas de las predicciones, cuántas quedan fuera de `SALEPRICE_RANGE`, el CSV y el histograma.
+
+## MLflow (rama `feature/mlflow`)
+
+- **Backend:** SQLite local `mlflow.db` (tracking + Model Registry) y artefactos en `mlruns/<experimento>`, ambos en la raíz y fuera de git. Configuración en `house_pricing/config.py` (`MLFLOW_*`, redirigibles con las variables de entorno `MLFLOW_TRACKING_URI` y `MLFLOW_ARTIFACTS_URI`) y `house_pricing/tracking.py` (`configurar_mlflow`).
+- **UI:** `mlflow ui --backend-store-uri sqlite:///mlflow.db` desde la raíz → http://127.0.0.1:5000.
+- **Notebook 3.0:** jerarquía de 3 niveles. El run `torneo_AAAAMMDD_HHMMSS` agrupa la ejecución: queda abierto desde "Configuración de MLflow" hasta "Cierre del run del torneo", donde recibe `tabla_torneo.csv`, las gráficas del torneo, los tags de champion/challengers con sus versiones y el RMSE/NRMSE del champion. Dentro hay un run por modelo (parámetros, métricas train/CV/validación, `diagnostico.png`, `configuraciones.csv`, tag `posicion`) y, dentro de cada modelo, un run por configuración (42 en total). Todos llevan el tag `torneo`.
+- **Notebook 4.0:** el run de inferencia se llama `inferencia_AAAAMMDD_HHMMSS`.
+- **Registry:** modelo `house_pricing`. Los 3 mejores por RMSE de validación se registran como pipeline de inferencia completo reentrenado con 1,458 casas, dentro del run de su modelo: `champion` (GradientBoosting), `challenger_1` (Lasso), `challenger_2` (ElasticNet). Cada corrida del 2.0 crea versiones nuevas y mueve los aliases.
+- **Detalles técnicos:** MLflow 3.18 usa `skops` por defecto, que no puede serializar feature-engine, así que se registra con `serialization_format="cloudpickle"`. La firma declara las 30 features como opcionales y los numéricos como `double`; por eso, con el flavor `pyfunc`, los numéricos deben enviarse como float (relevante para FastAPI). Ojo con el límite de 260 caracteres de rutas en Windows: las rutas de artefactos llegan a ~205.
 
 ## Script de inferencia (`scripts/inferencia.py`)
 

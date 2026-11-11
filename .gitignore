@@ -5,9 +5,14 @@
 !/data/**/
 !/data/**/.gitkeep
 
-# Modelos entrenados: se regeneran con los notebooks 1.1 y 2.0
+# Modelos entrenados: se regeneran con los notebooks 2.0 y 3.0
 /models/*
 !/models/.gitkeep
+
+# MLflow: base de tracking/registry y artefactos locales; se regeneran con
+# los notebooks 3.0 y 4.0
+/mlflow.db
+/mlruns/
 
 # Archivos personales de trabajo
 hola.py
