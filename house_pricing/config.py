@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -20,6 +21,18 @@ MODELS_DIR = PROJ_ROOT / "models"
 
 REPORTS_DIR = PROJ_ROOT / "reports"
 FIGURES_DIR = REPORTS_DIR / "figures"
+
+# MLflow: tracking y Model Registry en SQLite local, artefactos en mlruns/.
+# Se pueden redirigir con variables de entorno (por ejemplo, en .env).
+MLFLOW_TRACKING_URI = os.getenv(
+    "MLFLOW_TRACKING_URI", f"sqlite:///{(PROJ_ROOT / 'mlflow.db').as_posix()}"
+)
+MLFLOW_ARTIFACTS_URI = os.getenv(
+    "MLFLOW_ARTIFACTS_URI", (PROJ_ROOT / "mlruns").as_uri()
+)
+MLFLOW_EXPERIMENT_ENTRENAMIENTO = "house_pricing-entrenamiento"
+MLFLOW_EXPERIMENT_INFERENCIA = "house_pricing-inferencia"
+MLFLOW_MODEL_NAME = "house_pricing"
 
 # If tqdm is installed, configure loguru with tqdm.write
 # https://github.com/Delgan/loguru/issues/135

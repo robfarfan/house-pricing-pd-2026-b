@@ -19,6 +19,8 @@ Construir un modelo que prediga `SalePrice` con el dataset de Kaggle *House Pric
 - ✅ Pipeline de inferencia completo, de los datos crudos al precio en dólares, en `models/pipeline_inferencia.joblib`.
 - ✅ Notebook de inferencia en `notebooks/4.0-rf-inferencia.ipynb`, con las predicciones en `data/processed/predicciones_test.csv`.
 - ✅ Script de inferencia para la API en `scripts/inferencia.py`, con logging, control de calidad y pruebas.
+- ✅ Repositorio git público en https://github.com/robfarfan/house-pricing-pd-2026-b (`main`).
+- 🔄 Integración de MLflow en los notebooks 3.0 y 4.0, en la rama `feature/mlflow` (subida a GitHub). Por ahora las ramas se manejan de forma independiente, sin merge a `main`; `main` solo recibió el renombre de los notebooks (commit e0635e5). Ver sección MLflow.
 - ⏭️ **Siguiente paso:** crear la API con FastAPI que consuma `scripts/inferencia.py` (`predecir_registros`).
 
 ## Estructura relevante
@@ -78,7 +80,7 @@ House_Pricing/
 
 - **Nombres de notebooks** (convenio de Cookiecutter): `<número>-rf-<descripción-con-guiones>.ipynb`.
   - Una fase por número entero: `1.0` análisis exploratorio, `2.0` feature engineering, `3.0` entrenamiento de modelos y `4.0` inferencia. Las variantes de una misma fase usan `x.1`, `x.2`…
-  - El 2026-11-10 se renombraron (antes: `1.1-rf-transformaciones`, `2.0-rf-modelado` y `3.0-rf-inferencia`).
+  - El 2026-11-10 se renombraron (antes: `1.1-rf-transformaciones`, `2.0-rf-modelado` y `3.0-rf-inferencia`). Los runs de MLflow anteriores conservan el nombre viejo como origen.
 - **En los notebooks:**
   - Cada paso lleva su título y una descripción simple, y va en su propia celda.
   - Ante cualquier decisión metodológica, el usuario prefiere que le preguntemos con opciones y una recomendación, en vez de asumir.
@@ -168,10 +170,20 @@ TransformedTargetRegressor(func=log1p, inverse_func=expm1)
 
 ## Notebook 4.0: inferencia
 
-1. Carga `pipeline_inferencia.joblib` y lee `test.csv` crudo.
+1. Carga el champion del Model Registry (`models:/house_pricing@champion`, flavor `sklearn`) y lee `test.csv` crudo.
 2. Predice en dólares: 1459 casas, sin faltantes ni valores negativos. La media predicha es 178,185 USD, contra 180,921 USD en train.
 3. Compara en un histograma la distribución predicha con la real.
 4. Guarda `data/processed/predicciones_test.csv` con `Id` y `SalePrice`, en el formato de `sample_submission.csv`.
+5. Registra un run en el experimento `house_pricing-inferencia` con la versión usada, estadísticas de las predicciones, cuántas quedan fuera de `SALEPRICE_RANGE`, el CSV y el histograma.
+
+## MLflow (rama `feature/mlflow`)
+
+- **Backend:** SQLite local `mlflow.db` (tracking + Model Registry) y artefactos en `mlruns/<experimento>`, ambos en la raíz y fuera de git. Configuración en `house_pricing/config.py` (`MLFLOW_*`, redirigibles con las variables de entorno `MLFLOW_TRACKING_URI` y `MLFLOW_ARTIFACTS_URI`) y `house_pricing/tracking.py` (`configurar_mlflow`).
+- **UI:** `mlflow ui --backend-store-uri sqlite:///mlflow.db` desde la raíz → http://127.0.0.1:5000.
+- **Notebook 3.0:** jerarquía de 3 niveles. El run `torneo_AAAAMMDD_HHMMSS` agrupa la ejecución: queda abierto desde "Configuración de MLflow" hasta "Cierre del run del torneo", donde recibe `tabla_torneo.csv`, las gráficas del torneo, los tags de champion/challengers con sus versiones y el RMSE/NRMSE del champion. Dentro hay un run por modelo (parámetros, métricas train/CV/validación, `diagnostico.png`, `configuraciones.csv`, tag `posicion`) y, dentro de cada modelo, un run por configuración (42 en total). Todos llevan el tag `torneo`.
+- **Notebook 4.0:** el run de inferencia se llama `inferencia_AAAAMMDD_HHMMSS`.
+- **Registry:** modelo `house_pricing`. Los 3 mejores por RMSE de validación se registran como pipeline de inferencia completo reentrenado con 1,458 casas, dentro del run de su modelo: `champion` (GradientBoosting), `challenger_1` (Lasso), `challenger_2` (ElasticNet). Cada corrida del 2.0 crea versiones nuevas y mueve los aliases.
+- **Detalles técnicos:** MLflow 3.18 usa `skops` por defecto, que no puede serializar feature-engine, así que se registra con `serialization_format="cloudpickle"`. La firma declara las 30 features como opcionales y los numéricos como `double`; por eso, con el flavor `pyfunc`, los numéricos deben enviarse como float (relevante para FastAPI). Ojo con el límite de 260 caracteres de rutas en Windows: las rutas de artefactos llegan a ~205.
 
 ## Script de inferencia (`scripts/inferencia.py`)
 
